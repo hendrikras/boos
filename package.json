@@ -1,0 +1,16 @@
+{
+  "name": "boosp5",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bbol.js",
+  "scripts": {
+    "start": "http-server"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.1488.0",
+    "http-server": "^14.1.1",
+    "jmespath": "^0.16.0"
+  }
+}
