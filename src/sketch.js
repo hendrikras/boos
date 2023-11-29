@@ -1,9 +1,9 @@
 import { Wereld } from './Wereld.js';
 import { Splash } from './Splash.js';
 import { Dimensie } from './Dimensie.js';
-import { Constants } from './constants.js';
+import { FRAME_RATE } from './constants.js';
 
-new p5(function(p5, SVG){
+new p5(function(p5){
   p5.setup = function(){
 
     const header = p5.createDiv();
@@ -32,9 +32,10 @@ new p5(function(p5, SVG){
     lifeBlock.parent(header);
     lifeBlock.html('life:1');
 
-    const canvas = p5.createCanvas(500, 500, SVG); // Adjust the canvas size as needed
+    const canvas = p5.createCanvas(500, 500); // Adjust the canvas size as needed
     canvas.style('border', ridge);
-    p5.frameRate(Constants.FRAME_RATE);
+
+    p5.frameRate(FRAME_RATE);
       // Create a new instance of the Bbol class
       const app = new Bbol(p5);
       p5.app = app;

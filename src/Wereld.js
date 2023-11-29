@@ -1,52 +1,65 @@
-import { Doos } from './Doos.js';
-import { Leeg } from './Leeg.js';
-import { Bol } from './Bol.js';
-import { Mens } from './Mens.js';
-import { Constants } from './constants.js';
+import Doos from './Doos.js';
+import Leeg from './Leeg.js';
+import Bol from './Bol.js';
+import Mens from './Mens.js';
+import Spook from './Spook.js';
+import { DRAW_SIZE, FRAME_RATE, LIVES } from './constants.js';
 
 export class Wereld {
   constructor(dimensie, hoofd) {
     this.dim = dimensie;
     this.hoofd = hoofd;
     this.updown = true;
-    this.iLif = Constants.LIVES;
+    this.iLif = LIVES;
     this.bolDelay = 300;
     this.iLev = 1;
     this.einde = false;
     this.pause = false;
     this.count = 0;
     this.mens = new Mens(0, 0);
+    this.bol = new Bol(this.dim.width - 1, this.dim.height - 1, this.dim);
     this.reset();
   }
 
   reset() {
     this.stop();
-    this.velden = new Array(this.dim.width).fill(null).map(() => new Array(this.dim.height).fill(new Leeg(0, 0, this.dim)));
-    this.afstand = new Array(this.dim.width).fill(null).map(() => new Array(this.dim.height).fill(Infinity));
-    this.tekenGrootte = Constants.DRAW_SIZE;
-
-    for (let i = 0; i < this.dim.width; ++i) {
-        for (let j = 0; j < this.dim.height; ++j) {
-            if (Math.random() < 0.25) {
-                this.velden[i][j] = new Doos(i, j);
-            } else {
-                this.velden[i][j] = new Leeg(i, j);
-            }
+    this.velden = Array.from({ length: this.dim.width }, (_, widthIndex) =>
+      Array.from({ length: this.dim.height }, (_, heightIndex) => {
+        if (widthIndex === 0 && heightIndex === 0) {
+          return new Mens(widthIndex, heightIndex, this.dim);
+        } else if (heightIndex === this.dim.height && widthIndex === this.dim.width) {
+          return new Bol(widthIndex, heightIndex, this.dim);
         }
-    }
+        if (Math.random() < 0.25) {
+          return new Doos(widthIndex, heightIndex);
+        }
+        return new Leeg(widthIndex, heightIndex, this.dim)
+      })
+    );
+
+    this.afstand = new Array(this.dim.width).fill(null).map(() => new Array(this.dim.height).fill(Infinity));
+    this.tekenGrootte = DRAW_SIZE;
+
+    // for (let i = 0; i < this.dim.width; ++i) {
+    //     for (let j = 0; j < this.dim.height; ++j) {
+    //        
+    //     }
+    // }
     const x = this.mens.getX();
     const y = this.mens.getY();
-    console.log('grave', this.velden[x][y]);
+    this.velden[x][y] = new Spook(x, y, this.dim);
+    // console.log('grave', this.velden[x][y]);
     // this.velden[x][y].verplaatsen(1, 1);
     // this.velden[x][y].verplaatsen(-1, -1);
-    this.bol = new Bol(this.dim.width - 2, this.dim.height - 2);
-    // this.mens.reset();
-    debugger;
-    this.velden[x][y].reset();
-    console.log('mens', this.velden[x][y]);
+
+    this.mens.reset();
+    // this.velden[x][y].reset();
+    // debugger;
+
+    // console.log('mens', this.velden[x][y].isMens());
     this.velden[0][0] = this.mens;
 
-    this.velden[this.dim.width - 2][this.dim.height - 2] = this.bol;
+    this.bol.reset();
     this.wissel = false;
     this.einde = false;
   }
@@ -62,20 +75,20 @@ export class Wereld {
     }
   }
 
- action()    //  verwerk timer event
+  action()    //  verwerk timer event
   {
-      if( !this.einde )            //  bij einde geen actie
+    if (!this.einde)            //  bij einde geen actie
+    {
+      if (this.count === FRAME_RATE / 2)        //  om en om
       {
-          if( this.count === Constants.FRAME_RATE / 2 )        //  om en om
-          {
-              this.count = 0;
-              this.resetAfstand( );
-              this.bepaalAfstand( this.mens.getX( ), this.mens.getY( ), 1 );
-              this.bol.setVrij( this.afstand[ this.bol.getX( ) ][ this.bol.getY( ) ] != Infinity );
-              this.verplaatsBol( );
-          }
-          this.count += 1;
+        this.count = 0;
+        this.resetAfstand();
+        this.bepaalAfstand(this.mens.getX(), this.mens.getY(), 1);
+        this.bol.setVrij(this.afstand[this.bol.getX()][this.bol.getY()] != Infinity);
+        this.verplaatsBol();
       }
+      this.count += 1;
+    }
   }
 
   stop() {
@@ -86,8 +99,8 @@ export class Wereld {
     p5.background(255, 255, 255);
     p5.fill(0, 0, 255);
     let dimsiz = this.dim.height;
-    let d = this.tekenGrootte * dimsiz;
-    const offset = 10;
+    // let d = this.tekenGrootte * dimsiz;
+    // const offset = 10;
     // for (let i = this.tekenGrootte; i < d; i += this.tekenGrootte) {
     //   p5.line(i, offset, i, d); // vertical lines
     //   p5.line(offset, i, d, i); // horizontal lines
@@ -103,7 +116,7 @@ export class Wereld {
     levelBlock.html(`level: ${this.iLev}`);
     const lifeBlock = p5.select('#life-block');
     lifeBlock.html(`life: ${this.iLif}`)
-    
+
     if (this.einde) {
       this.bol.opblazen(p5);
     }
@@ -147,7 +160,7 @@ export class Wereld {
     let y = this.bol.getY();
     let af = []; // afstanden in 4 richtingen
     let min = 0;
-  
+
     if (this.afstand[x][y] !== Infinity) {
       // agressieve zet mogelijk
       af[0] = this.isLegaal(x - 1, y) ? this.afstand[x - 1][y] : Infinity;
@@ -169,13 +182,13 @@ export class Wereld {
         ? this.dobbelsteen()
         : Infinity;
     }
-  
+
     for (let i = 1; i < 4; i++) {
       if (af[i] !== Infinity && af[i] < af[min]) {
         min = i; // kleinste afstand
       }
     }
-  
+
     if (af[min] === Infinity) {
       // geen zet meer mogelijk !!
       // this.dim.height++;
@@ -185,7 +198,7 @@ export class Wereld {
       this.reset();
       return false;
     }
-  
+
     let dx = 0;
     let dy = 0;
     switch (min) {
@@ -202,31 +215,32 @@ export class Wereld {
         dy = 1;
         break;
       case 5:
-        console.log("ONVOORZIENE SITUATIE!!!");
+        console.error("ONVOORZIENE SITUATIE!!!");
         break;
     }
-  
+
     // staat op de nieuwe positie soms de mens??
-    if (this.velden[x + dx][y + dy].isMens()) {
+    const isMens = this.velden[x + dx][y + dy].isMens();
+    if (isMens) {
       this.iLif--;
 
       if (this.iLif == 0) {
         this.hoofd.goMain(); // terug naar hoofdscherm
         this.bolDelay = 300;
-        this.iLif = Constants.LIVES;
+        this.iLif = LIVES;
         this.dim.height = 10;
         this.dim.width = 10;
         this.iLev = 1;
       }
-  
+
       this.reset();
     }
 
-  
+
     this.bol.verplaatsen(dx, dy);
-    this.velden[x + dx][y + dy] = this.bol;
+    this.velden[x + dx][y + dy] = isMens ? new Spook(x + dx, y + dy) : this.bol;
     this.velden[x][y] = new Leeg(x, y, this.dim);
-  
+
     return true;
   }
 
@@ -247,14 +261,18 @@ export class Wereld {
     let y = this.mens.getY();
     let nx = x + dx; // new position
     let ny = y + dy;
-    if (!this.isLegaal(nx, ny)) return false; // movement not possible
+    const magDat = this.isLegaal(nx, ny)
+
+    if (!magDat) return false; // movement not possible
 
     let rijDozen = false;
     while (this.velden[nx][ny].isDoos()) {
       rijDozen = true; // there is a row of boxes
       nx += dx;
       ny += dy;
-      if (!this.isLegaal(nx, ny)) return false; // no movement
+      const isLegit = this.isLegaal(nx, ny);
+      console.log('isLegit', isLegit)
+      if (!isLegit) return false; // no movement
     }
 
 
@@ -267,6 +285,9 @@ export class Wereld {
       this.mens.verplaatsen(dx, dy);
       this.velden[x + dx][y + dy] = this.mens;
       this.velden[x][y] = new Leeg(x, y, this.dim);
+    }
+    else if (!(this.velden[x + dx][y + dy].isLeeg())) {
+      console.log(this.velden[x + dx][y + dy])
     }
 
     return true;

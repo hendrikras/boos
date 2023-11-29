@@ -1,20 +1,20 @@
-import {Veld} from './Veld.js';
-import {Constants} from './constants.js';
+import Leeg from './Leeg.js';
+import { BOL, FRAME_RATE } from './constants.js';
 
-export class Bol extends Veld {
+export default class Bol extends Leeg {
   constructor(x, y, dim) {
     super(x, y, dim);
     this.mond = false;
     this.count = 0;
-    this.limit = Constants.FRAME_RATE / 2;
+    this.limit = FRAME_RATE / 2;
     this.vrij = true;
     this.dx = 0;
-    this.typeVeld = Constants.BOL;
+    this.typeVeld = BOL;
   }
 
   paint(p5) {
-
-    if (this.count === this.limit){
+    super.paint(p5);
+    if (this.count === this.limit) {
       this.mond = !this.mond;
       this.count = 0;
     }
@@ -28,7 +28,7 @@ export class Bol extends Veld {
     const arcAngle = 300 + d + d;
     const x = this.scherm.x + this.scrn.vldSz / 2;
     const y = this.scherm.y + this.scrn.detSz * 2.5;
-    p5.arc(x , y, this.scrn.objSz, this.scrn.objSz, p5.radians(startAngle), p5.radians(arcAngle));
+    p5.arc(x, y, this.scrn.objSz, this.scrn.objSz, p5.radians(startAngle), p5.radians(arcAngle));
 
     // Draw the eye
     p5.fill(255, 255, 255);
@@ -46,6 +46,10 @@ export class Bol extends Veld {
     p5.arc(1, 1, 23 + this.dx, 23 + this.dx, 20 - d, 300 + d + d);
     p5.fill(255, 0, 0);
     p5.rect(12 + this.dx / 3, 4, this.dx / 3, this.dx / 3); // Eye
+  }
+
+  reset() {
+    super.reset();
   }
 
   setVrij(vrij) {
