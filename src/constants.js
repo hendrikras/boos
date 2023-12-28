@@ -1,4 +1,4 @@
-const DRAW_SIZE = 50;
+const DRAW_SIZE = 500;
 const FRAME_RATE = 20;
 const LEEG = 0;
 const BOL = 1;

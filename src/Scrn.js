@@ -1,4 +1,4 @@
-export class Scrn {
+export default class Scrn {
   constructor(vs, os, ds, dss) {
     this.vldSz = vs;
     this.objSz = os;

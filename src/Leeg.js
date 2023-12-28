@@ -1,9 +1,9 @@
-import {Veld} from './Veld.js';
+import Veld from './Veld.js';
 
 export default class Leeg extends Veld {
   constructor(x, y, dim) {
     super(x, y, dim);
-    this.viewPort = {x: 24, y: 24};
+    this.viewPort = {x: 36, y: 36};
     const nums =  this.calcCoords(16, 164.696, this.viewPort, this.viewPort);
     this.p1 = nums.x;
     this.p2= nums.y;
@@ -13,12 +13,32 @@ export default class Leeg extends Veld {
     const pathLast = 'M211.478,445.217h-128c-9.22,0-16.696-7.475-16.696-16.696V211.478h144.696V445.217z';
     const p1 = 'M21 2H3a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1zm-1 6h-4v4h4v4h-4v4h-4v-4H8v4H4v-4h4v-4H4V8h4V4h4v4h4V4h4v4z';
     const p2 = 'M8 8h4v4H8zm4 4h4v4h-4z';
+
+    const pa = 'M35 36H1c-.55 0-1-.45-1-1V1c0-.55.45-1 1-1h34c.55 0 1 .45 1 1v34c0 .55-.45 1-1 1z'
+    + 'M1 36h34c.55 0 1-.45 1-1V1a.993.993 0 0 0-.294-.706L.294 35.706A.993.993 0 0 0 1 36z'
+    + 'M2 2h32v32H2z'
+    + 'M2 34V2h32z'
+    + 'M17 2h2v32h-2z'
+    + 'M2 19v-2h32v2z'
+    ;
     // this.colors = ['#EACA7150', '#E1B76250', '#D8832990', '#CB6D2580'];
-    this.colors = ['#D2D1CD', '#A8A7A4', '#868683', '#6B6B69', '#565654', '#454543', '#373736', '#2C2C2B', '#232322', '#1C1C1B']
-    this.colors2 = ['#E1B762', '#EACA71', '#EACA71', '#E1B762'];
-    this.commands = this.getCommands(p1);
-    this.commands2 = this.getCommands(p2);
-    this.commands3 = this.getCommands(pathLast);
+    // this.colors = ['#D2D1CD', '#A8A7A4', '#868683', '#6B6B69', '#565654', '#454543', '#373736', '#2C2C2B', '#232322', '#1C1C1B'];
+    // this.colors2 = ['#E1B762', '#EACA71', '#EACA71', '#E1B762'];
+    const snow = '#FFFFFF'; // White
+    const frost = '#D9F3F1'; // Light Green
+    const ice = '#ADD8E6'; // Light Blue
+    const snowfall = '#E5E5E5'; // Light Gray
+    const mist = '#D3D3D3'; // Smoke Gray
+    const aurora = '#B0E0E6'; // Powder Blue
+
+    this.colors = [aurora, frost, ice, snowfall, mist, snow];
+    this.colors2 = ['#e7edeb10', '#8ecece10', '#62a1c710', '#62a1c710', '#acd6f620', '#acd6f620', '#52a5de40', '#18284a40']
+
+    // create a random array
+
+    this.commands = this.getCommands(pa);
+  //   this.commands2 = this.getCommands(path2);
+  //   this.commands3 = this.getCommands(pathLast);
   }
 
   paint(p5) {
@@ -29,7 +49,8 @@ export default class Leeg extends Veld {
 // p5.strokeWeight(1)
 // p5.strokeCap(p5.ROUND);
 // p5.strokeJoin(p5.ROUND);
-    this.paintShape(p5, this.commands, this.colors, this.viewPort);
-    this.paintShape(p5, this.commands2, this.colors2, this.viewPort);
+    this.paintShape(p5, this.commands, this.colors2, this.viewPort);
+    // this.paintShape(p5, this.commands2, this.colors, this.viewPort);
+    // this.paintShape(p5, this.commands3, this.colors2.slice().reverse(), this.viewPort);
   }
 }

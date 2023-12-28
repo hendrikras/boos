@@ -1,10 +1,10 @@
-import Grave from './Spook.js';
+import Veld from './Doos.js';
 import Punt from './Punt.js';
-import { Scrn } from './Scrn.js';
-import { Constants } from './constants.js';
-import Snap from 'https://esm.sh/snapsvg';
+// import Scrn from './Scrn.js';
+// import { Constants } from './constants.js';
+// import Snap from 'https://esm.sh/snapsvg';
 
-const d = Constants.DRAW_SIZE;
+// const d = Constants.DRAW_SIZE;
 
 const colors = [
   '#D2D1CD',
@@ -23,7 +23,7 @@ const colors = [
  
 const vp = { x: 512, y: 512 };
 
-const veld = new Grave(0, 0);
+const veld = new Veld(0, 0, {width: 10, height:10});
 
 new p5(function(p5){
     p5.setup = function(){

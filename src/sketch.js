@@ -1,13 +1,13 @@
-import { Wereld } from './Wereld.js';
-import { Splash } from './Splash.js';
-import { Dimensie } from './Dimensie.js';
+import Wereld from './Wereld.js';
+import Splash from './Splash.js';
+import Dimensie from './Dimensie.js';
 import { FRAME_RATE } from './constants.js';
 
 new p5(function(p5){
   p5.setup = function(){
 
     const header = p5.createDiv();
-    const ridge = '20px ridge rgb(221,125,125)';
+    const ridge = '20px ridge #436580';
     header.id("header-div");
     header.style('position', 'relative');
     header.style('left', '0');

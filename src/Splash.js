@@ -1,4 +1,4 @@
-export class Splash {
+export default class Splash {
   constructor(wereld, hoofd, p5) {
     this.hoofd = hoofd;
     this.hoogte = p5.height;
