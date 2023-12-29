@@ -2,7 +2,7 @@ import Doos from './Doos.js';
 import Leeg from './Leeg.js';
 import Bol from './Bol.js';
 import Mens from './Mens.js';
-import Spook from './Spook.js';
+import Wak from './Wak.js';
 import { DRAW_SIZE, FRAME_RATE, LIVES } from './constants.js';
 
 export default class Wereld {
@@ -41,7 +41,7 @@ export default class Wereld {
     this.tekenGrootte = DRAW_SIZE / this.dim.height;
     const x = this.mens.getX();
     const y = this.mens.getY();
-    this.velden[x][y] = new Spook(x, y, this.dim);
+    this.velden[x][y] = new Wak(x, y, this.dim);
 
     this.mens.reset(this.dim);
     this.velden[0][0] = this.mens;
@@ -53,11 +53,21 @@ export default class Wereld {
   }
 
   start(p5) {
-    const levelBlock = p5.select('#level-block');
-    levelBlock.html(`level: ${this.iLev}`);
-    const lifeBlock = p5.select('#life-block');
-    lifeBlock.html(`life: ${this.iLif}`)
-    this.run(p5);
+    const levelBlock = p5?.select('#level-block');
+    if (levelBlock) {
+      levelBlock.html(`level: ${this.iLev}`);
+      const lifeBlock = p5.select('#life-block');
+      let lifstr = '';
+
+      for (let i = 0; i < this.iLif; i++) {
+        lifstr = `${lifstr}❤️`;
+      }
+      lifeBlock.html(lifstr)
+      this.run(p5);
+    }else {
+      this.hoofd.splash.active = true;
+      this.hoofd.splash.selectedY = 1;
+    }
   }
 
   run(p5) {
@@ -90,21 +100,12 @@ export default class Wereld {
   paint(p5) {
     p5.background(255, 255, 255);
     p5.fill(0, 0, 255);
-    let dimsiz = this.dim.height;
-    // let d = this.tekenGrootte * dimsiz;
-    // const offset = 10;
-    // for (let i = this.tekenGrootte; i < d; i += this.tekenGrootte) {
-    //   p5.line(i, offset, i, d); // vertical lines
-    //   p5.line(offset, i, d, i); // horizontal lines
-    // }
-
+    let dimsiz = this.dim.height
     for (let i = 0; i < dimsiz; i++) {
       for (let j = 0; j < dimsiz; j++) {
         this.velden[i][j].paint(p5);
       }
     }
-
-
 
     if (this.einde) {
       this.bol.opblazen(p5);
@@ -217,7 +218,7 @@ export default class Wereld {
 
       if (this.iLif == 0) {
         this.hoofd.goMain(); // terug naar hoofdscherm
-        this.bolDelay = 300;
+        this.bolDelay = FRAME_RATE / 2;
         this.iLif = LIVES;
         this.dim.height = 10;
         this.dim.width = 10;
@@ -229,7 +230,7 @@ export default class Wereld {
 
 
     this.bol.verplaatsen(dx, dy);
-    this.velden[x + dx][y + dy] = isMens ? new Spook(x + dx, y + dy, this.dim) : this.bol;
+    this.velden[x + dx][y + dy] = isMens ? new Wak(x + dx, y + dy, this.dim) : this.bol;
     this.velden[x][y] = new Leeg(x, y, this.dim);
 
     return true;
