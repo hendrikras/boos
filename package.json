@@ -2,15 +2,18 @@
   "name": "boosp5",
   "version": "1.0.0",
   "description": "",
-  "main": "bbol.js",
+  "main": "sketch.js",
   "scripts": {
-    "start": "http-server"
+    "start": "http-server --cors=*",
+    "build": "rollup -c"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "^2.1488.0",
     "http-server": "^14.1.1",
-    "jmespath": "^0.16.0"
+    "jmespath": "^0.16.0",
+    "rollup": "^4.9.4",
+    "rollup-plugin-terser": "^7.0.2"
   }
 }

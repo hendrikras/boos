@@ -18,6 +18,7 @@ export default class Wereld {
     this.count = 0;
     this.mens = new Mens(0, 0, this.dim);
     this.bol = new Bol(this.dim.width - 1, this.dim.height - 1, this.dim);
+    this.moves = 0;
     this.reset();
   }
 
@@ -64,7 +65,7 @@ export default class Wereld {
       }
       lifeBlock.html(lifstr)
       this.run(p5);
-    }else {
+    } else {
       this.hoofd.splash.active = true;
       this.hoofd.splash.selectedY = 1;
     }
@@ -86,7 +87,7 @@ export default class Wereld {
         this.count = 0;
         this.resetAfstand();
         this.bepaalAfstand(this.mens.getX(), this.mens.getY(), 1);
-        // this.bol.setVrij(this.afstand[this.bol.getX()][this.bol.getY()] != Infinity);
+        this.bol.setVrij(this.afstand[this.bol.getX()][this.bol.getY()] != Infinity);
         this.verplaatsBol();
       }
       this.count += 1;
@@ -181,11 +182,14 @@ export default class Wereld {
 
     if (af[min] === Infinity) {
       // geen zet meer mogelijk !!
-      this.dim.height++;
-      this.dim.width++;
-      this.iLev++;
-      if (this.bolDelay !== 1) {
-        this.bolDelay--;
+      if (this.moves !== 0) {
+        this.moves = 0;
+        this.dim.height++;
+        this.dim.width++;
+        this.iLev++;
+        if (this.bolDelay !== 1) {
+          this.bolDelay--;
+        }
       }
       this.reset();
       return false;
@@ -217,7 +221,7 @@ export default class Wereld {
       this.iLif--;
 
       if (this.iLif == 0) {
-        this.hoofd.goMain(); // terug naar hoofdscherm
+        this.hoofd.goMain(this.iLev); // terug naar hoofdscherm
         this.bolDelay = FRAME_RATE / 2;
         this.iLif = LIVES;
         this.dim.height = 10;
@@ -246,6 +250,7 @@ export default class Wereld {
   }
 
   verplaatsMens(dx, dy) {
+    this.moves += 1;
 
     if (dx === 0 && dy === 0) return false; // no movement desired
 
@@ -277,9 +282,6 @@ export default class Wereld {
       this.velden[x + dx][y + dy] = this.mens;
       this.velden[x][y] = new Leeg(x, y, this.dim);
     }
-    // else if (!(this.velden[x + dx][y + dy].isLeeg())) {
-    //   console.log(this.velden[x + dx][y + dy])
-    // }
 
     return true;
   }
