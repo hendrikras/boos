@@ -48,12 +48,18 @@ export default class Veld {
     this.scherm.x = this.positie.x * this.scrn.vldSz;
     this.scherm.y = this.positie.y * this.scrn.vldSz;
   }
-  reset(dimensie) {
+  reset(dimensie, isDimPosition = false) {
     this.tekenGrootte = DRAW_SIZE / dimensie.height;
     this.scrn = new Scrn(this.tekenGrootte, (this.tekenGrootte - (this.tekenGrootte / dimensie.height)), this.tekenGrootte / (dimensie.width / 2), (this.tekenGrootte / (dimensie.width / 2)) - 1);
 
-    this.positie.x = this.startX;
-    this.positie.y = this.startY;
+    if (isDimPosition){
+      this.positie.x = dimensie.width - 1;
+      this.positie.y = dimensie.height - 1;
+    } else {
+      this.positie.x = this.startX;
+      this.positie.y = this.startY;
+    }
+
     this.scherm.x = this.positie.x * this.scrn.vldSz;
     this.scherm.y = this.positie.y * this.scrn.vldSz;
   }

@@ -1,8 +1,6 @@
 import p5 from 'https://esm.sh/p5@1.8.0';
-import Wereld from './Wereld.js';
-import Splash from './Splash.js';
-import Dimensie from './Dimensie.js';
-import { FRAME_RATE, DRAW_SIZE, GET_API, POST_API } from './constants.js';
+import Boos from './Boos.js';
+import { FRAME_RATE, DRAW_SIZE } from './constants.js';
 
 function createButton(p5, parent, position, size, text, color, hoverColor, clickHandler) {
   const button = p5.createButton(text);
@@ -30,7 +28,6 @@ function mobileAndTabletCheck() {
 
 new p5(function (p5) {
   p5.setup = function () {
-
     const header = p5.createDiv();
     const ridge = '20px ridge #436580';
     header.id("header-div");
@@ -92,8 +89,8 @@ new p5(function (p5) {
     canvas.style('border', ridge);
 
     p5.frameRate(FRAME_RATE);
-    // Create a new instance of the Bbol class
-    const app = new Bbol(p5);
+    // Create a new instance of the Boos class
+    const app = new Boos(p5);
     p5.app = app;
   }
   p5.draw = async function () {
@@ -117,143 +114,3 @@ new p5(function (p5) {
     }
   }
 });
-
-class Bbol {
-  constructor(p5) {
-    this.dim = new Dimensie(10, 10);
-    this.wereld = new Wereld(this.dim, this, p5);
-    this.splash = new Splash(this.wereld, this, p5);
-    this.p5 = p5;
-    this.end = true;
-    this.highscore = [
-      { PlayerName: 'Peter', Score: 1000 },
-      { PlayerName: 'Mike', Score: 900 },
-      { PlayerName: 'John', Score: 800 },
-      { PlayerName: 'Jane', Score: 700 },
-      { PlayerName: 'Sue', Score: 600 },
-      { PlayerName: 'Bill', Score: 500 },
-      { PlayerName: 'Kate', Score: 400 },
-      { PlayerName: 'Alex', Score: 300 },
-      { PlayerName: 'Anna', Score: 200 },
-      { PlayerName: 'Rebecca', Score: 100 }
-    ];
-    fetch(GET_API)
-      .then(response => {
-        return response.text();
-      })
-      .then(data => {
-        this.highscore = JSON.parse(data)
-          .map(item => ({ PlayerName: item.PlayerName.S, Score: item.Score.N }))
-          .sort((a, b) => b.Score - a.Score);
-      })
-      .catch(error => console.error(error));
-    this.startTime = null;
-  }
-  moveHighscore(PlayerName, Score) {
-    for (let i = 0; i < this.highscore.length; i++) {
-      if (Score > this.highscore[i].Score) {
-        this.highscore.splice(i, 0, { PlayerName, Score });
-        break;
-      }
-    }
-    const orig = this.highscore;
-    this.highscore = this.highscore.slice(0, 10);
-
-    if (this.highscore !== orig) {
-      fetch(POST_API, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          PlayerName,
-          Score
-        })
-      })
-        .then(response => {
-          return response.text();
-        })
-        // .then(data => console.log(data))
-        .catch(error => console.error(error));
-    }
-
-    return this.highscore;
-  }
-  moveLeft() {
-    this.splash.moveLeft();
-    this.wereld.verplaatsMens(-1, 0);
-  }
-  moveRight() {
-    if (this.splash.active) {
-      this.splash.moveRight();
-    } else {
-      this.wereld.verplaatsMens(1, 0);
-    }
-  }
-  moveDown() {
-    if (this.splash.active) {
-      this.splash.moveDown();
-    } else {
-      this.wereld.verplaatsMens(0, 1);
-    }
-
-  }
-  moveUp() {
-    this.splash.moveUp();
-    this.wereld.verplaatsMens(0, -1);
-  }
-  confirm() {
-    this.splash.confirm();
-  }
-  update() {
-    if (!this.end) {
-      this.wereld.paint(this.p5);
-    }
-
-  }
-
-  startApp() {
-    if (this.splash.active) {
-      this.splash.paint();
-      this.wereld.pause = true;
-    } else {
-      if (!this.startTime) {
-        this.startTime = new Date();
-      }
-      this.wereld.pause = false;
-      this.wereld.start(this.p5);
-    }
-  }
-
-  pauseApp() {
-    this.wereld.pause = true;
-  }
-
-  capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  }
-
-  goMain(level) {
-    const time = this.stopTimer() / 10000;
-    const multiplier = 100 - time;
-    this.end = true;
-    this.splash.isScore = true;
-    this.moveHighscore(this.capitalizeFirstLetter(this.splash.playerName), Math.round(level * multiplier));
-    this.startGam();
-  }
-
-  startGam() {
-    this.wereld.start();
-  }
-
-  getDim() {
-    return this.dim;
-  }
-
-  // Stop a timer and return the time difference in milliseconds
-  stopTimer() {
-    let endTime = new Date();
-    let timeDiff = endTime - this.startTime;
-    return timeDiff;
-  }
-}

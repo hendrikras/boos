@@ -4,7 +4,6 @@ import { BOL, FRAME_RATE } from './constants.js';
 export default class Bol extends Leeg {
   constructor(x, y, dim) {
     super(x, y, dim);
-    this.mond = false;
     this.count = 0;
     this.limit = FRAME_RATE / 2;
     this.vrij = true;
@@ -31,22 +30,5 @@ export default class Bol extends Leeg {
   paint(p5) {
     super.paint(p5);
     this.paintShape(p5, this.commands, this.colors, this.viewPort);
-  }
-
-  opblazen(p5) {
-    if (this.dx > 300) return;
-
-    this.dx += 10;
-    let d = this.mond ? 0 : 20;
-    if (this.vrij) p5.fill(255, 0, 0);
-    else p5.fill(0, 0, 0);
-
-    p5.arc(1, 1, 23 + this.dx, 23 + this.dx, 20 - d, 300 + d + d);
-    p5.fill(255, 0, 0);
-    p5.rect(12 + this.dx / 3, 4, this.dx / 3, this.dx / 3); // Eye
-  }
-
-  setVrij(vrij) {
-    this.vrij = vrij;
   }
 }

@@ -3,10 +3,13 @@ import Leeg from './Leeg.js';
 import Bol from './Bol.js';
 import Mens from './Mens.js';
 import Wak from './Wak.js';
+import StopWatch from './StopWatch.js';
+import Punt from './Punt.js';
 import { DRAW_SIZE, FRAME_RATE, LIVES } from './constants.js';
 
-export default class Wereld {
+export default class extends StopWatch {
   constructor(dimensie, hoofd) {
+    super();
     this.dim = dimensie;
     this.hoofd = hoofd;
     this.updown = true;
@@ -18,39 +21,51 @@ export default class Wereld {
     this.count = 0;
     this.mens = new Mens(0, 0, this.dim);
     this.bol = new Bol(this.dim.width - 1, this.dim.height - 1, this.dim);
-    this.moves = 0;
+    this.moves = [];
+    this.bolMoves = [];
+    this.startTime = null;
+    this.liveTimes = [];
+    this.LevelStartPos = null;
     this.reset();
   }
 
-  reset() {
-    this.stop();
+  reset(wak) {
     this.velden = Array.from({ length: this.dim.width }, (_, widthIndex) =>
       Array.from({ length: this.dim.height }, (_, heightIndex) => {
         if (widthIndex === 0 && heightIndex === 0) {
           return this.mens;
-        } else if (heightIndex === this.dim.height && widthIndex === this.dim.width) {
+        } else if (heightIndex === this.dim.height - 1 && widthIndex === this.dim.width - 1) {
           return this.bol;
-        }
-        if (Math.random() < 0.25) {
+        } else if (wak && heightIndex === wak.y && widthIndex === wak.x) {
+          return new Wak(widthIndex, heightIndex, this.dim);
+        } else if (Math.random() < 0.25) {
           return new Doos(widthIndex, heightIndex, this.dim);
+        } else {
+          return new Leeg(widthIndex, heightIndex, this.dim);
         }
-        return new Leeg(widthIndex, heightIndex, this.dim)
       })
     );
 
     this.afstand = new Array(this.dim.width).fill(null).map(() => new Array(this.dim.height).fill(Infinity));
     this.tekenGrootte = DRAW_SIZE / this.dim.height;
-    const x = this.mens.getX();
-    const y = this.mens.getY();
-    this.velden[x][y] = new Wak(x, y, this.dim);
 
     this.mens.reset(this.dim);
     this.velden[0][0] = this.mens;
-
-    this.bol.reset(this.dim);
-    this.velden[0][0] = this.mens;
+    this.bol.reset(this.dim, true);
     this.wissel = false;
     this.einde = false;
+
+    const levelCandidate = this.velden.map((array) => array.map(veld => veld.typeVeld));
+    this.resetAfstand();
+    this.bepaalAfstand(this.mens.getX(), this.mens.getY(), 1);
+    this.moves = [];
+    this.bolMoves = [];
+    if (this.afstand[this.dim.height - 1][this.dim.width - 1] !== Infinity) {
+      this.LevelStartPos = levelCandidate.flat();
+    } else {
+      this.reset();
+
+    }
   }
 
   start(p5) {
@@ -73,6 +88,9 @@ export default class Wereld {
 
   run(p5) {
     if (!this.einde && !this.pause) {
+      if (!this.startTime) {
+        this.startTime = new Date();
+      }
       this.action();
       this.paint(p5);
     }
@@ -87,7 +105,6 @@ export default class Wereld {
         this.count = 0;
         this.resetAfstand();
         this.bepaalAfstand(this.mens.getX(), this.mens.getY(), 1);
-        this.bol.setVrij(this.afstand[this.bol.getX()][this.bol.getY()] != Infinity);
         this.verplaatsBol();
       }
       this.count += 1;
@@ -108,9 +125,6 @@ export default class Wereld {
       }
     }
 
-    if (this.einde) {
-      this.bol.opblazen(p5);
-    }
   }
 
   resetAfstand() {
@@ -180,17 +194,31 @@ export default class Wereld {
       }
     }
 
-    if (af[min] === Infinity) {
+    if (af[min] === Infinity && this.bolMoves.length > 0) {
       // geen zet meer mogelijk !!
-      if (this.moves !== 0) {
-        this.moves = 0;
-        this.dim.height++;
-        this.dim.width++;
-        this.iLev++;
-        if (this.bolDelay !== 1) {
-          this.bolDelay--;
-        }
+      this.hoofd.progress.push({
+        level: this.iLev,
+        moves: this.moves,
+        bolMoves: this.bolMoves,
+        time: this.stopTimer(),
+        levelStartPos: this.LevelStartPos
+      });
+      this.dim.height++;
+      this.dim.width++;
+      this.iLev++;
+      this.startTime = null;
+      if (this.bolDelay !== 1) {
+        this.bolDelay--;
+      } else {
+        this.hoofd.goMain(this.liveTimes);
+        this.liveTimes = [];
+        this.bolDelay = FRAME_RATE / 2;
+        this.iLif = LIVES;
+        this.dim.height = 10;
+        this.dim.width = 10;
+        this.iLev = 1;
       }
+
       this.reset();
       return false;
     }
@@ -219,21 +247,26 @@ export default class Wereld {
     const isMens = this.velden[x + dx][y + dy].isMens();
     if (isMens) {
       this.iLif--;
-
-      if (this.iLif == 0) {
-        this.hoofd.goMain(this.iLev); // terug naar hoofdscherm
+      this.liveTimes.push(this.stopTimer());
+      this.startTime = null;
+      this.bolMoves = [];
+      if (this.iLif === 0) {
+        this.hoofd.goMain(this.liveTimes); // terug naar hoofdscherm
+        this.liveTimes = [];
         this.bolDelay = FRAME_RATE / 2;
         this.iLif = LIVES;
         this.dim.height = 10;
         this.dim.width = 10;
         this.iLev = 1;
       }
+      const pos = new Punt(x + dx, y + dy)
 
-      this.reset();
+      this.reset(pos);
+      return false;
     }
 
-
     this.bol.verplaatsen(dx, dy);
+    this.bolMoves.push(min);
     this.velden[x + dx][y + dy] = isMens ? new Wak(x + dx, y + dy, this.dim) : this.bol;
     this.velden[x][y] = new Leeg(x, y, this.dim);
 
@@ -249,9 +282,16 @@ export default class Wereld {
     return die;
   }
 
-  verplaatsMens(dx, dy) {
-    this.moves += 1;
+  direction(dx, dy) {
+    if (dx === 1 && dy === 0) return  2; // right
+    else if (dx === -1 && dy === 0) return 0; // left
+    else if (dy === 1 && dx === 0) return 3; // down
+    else if (dy === -1 && dx === 0) return 1; // up
+    else { console.warn("Invalid direction") };
+    return 4;
+  }
 
+  verplaatsMens(dx, dy) {
     if (dx === 0 && dy === 0) return false; // no movement desired
 
     let x = this.mens.getX(); // current position
@@ -279,6 +319,7 @@ export default class Wereld {
 
     if (this.velden[x + dx][y + dy].isLeeg()) {
       this.mens.verplaatsen(dx, dy, this.dim);
+      this.moves.push(this.direction(dx, dy));
       this.velden[x + dx][y + dy] = this.mens;
       this.velden[x][y] = new Leeg(x, y, this.dim);
     }

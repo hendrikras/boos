@@ -2,7 +2,7 @@ import { DRAW_SIZE } from './constants.js';
 
 const TEXT_SIZE = DRAW_SIZE / 13;
 
-export default class Splash {
+export default class {
   constructor(wereld, hoofd, p5) {
     this.hoofd = hoofd;
     this.hoogte = p5.height;
@@ -23,7 +23,7 @@ export default class Splash {
     if (!remove) {
       this.playerName += char;
     }
-    this.printHeader('je naam:', this.playerName);
+    this.printHeader('Name:', this.playerName);
   }
 
   printHeader(left, right) {
@@ -46,7 +46,12 @@ export default class Splash {
       // Now put something in the middle (more or less).
       this.p5.textAlign(this.p5.CENTER, this.p5.CENTER);
       if (this.isScore) {
-        this.printHeader('High', 'Score');
+        if (this.hoofd.yourScore){
+          this.printHeader('Your Score', this.hoofd.yourScore);
+        } else {
+          this.printHeader('High', 'Score');
+        }
+  
         this.hoofd.highscore.forEach((item, index) => {
           this.p5.textSize(TEXT_SIZE);
           this.drawButton(`${item.PlayerName} ${item.Score}`, index, false);
@@ -55,7 +60,7 @@ export default class Splash {
       } else {
         this.p5.textSize(TEXT_SIZE);
         this.drawButton('Start', 1);
-        this.drawButton('Kies Naam', 2);
+        this.drawButton('Enter name', 2);
         this.drawButton('High Score', 3);
         this.totalLines = 3;
       }
@@ -71,7 +76,6 @@ export default class Splash {
         let char = this.alphabet[i];
         if (this.selectedX === i) {
           this.p5.textSize(SPACING + (TEXT_SIZE / 2));
-
           this.p5.fill('pink');
         } else {
           this.p5.textSize(SPACING);
@@ -145,7 +149,7 @@ export default class Splash {
             break;
           case 2:
             this.selectedX = 0;
-            this.selectedY = 0;
+            this.selectedY = 1;
             this.isMain = false;
             break
           case 3:
