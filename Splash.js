@@ -14,9 +14,10 @@ export default class {
     this.lineWidth = 0;
     this.totalLines = 0;
     this.alphabet = "abcdefghijklmnopqrstuvwxyz_⬅✔️";
-    this.isMain = false;
+    this.isMain = true;
     this.active = true;
     this.isScore = false;
+    this.callback = (name) => console.log('not implemented ' + name);
   }
 
   updateName(char, remove = false) {
@@ -163,6 +164,8 @@ export default class {
           this.isMain = true;
           this.selectedY = 1;
           this.selectedX = 0;
+          this.callback(this.playerName);
+          this.callback = () => null;
         } else if (this.selectedX === this.alphabet.length - 3) {
           this.playerName = this.playerName.substring(0, this.playerName.length - 1);
           this.updateName(null, true);
