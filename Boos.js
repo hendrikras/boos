@@ -33,7 +33,7 @@ export default class extends StopWatch {
       })
       .then(data => {
         this.highscore = JSON.parse(data)
-          .map(item => ({ PlayerName: item.PlayerName.S, Score: item.Score.N }))
+          .map(item => ({ PlayerName: item.PlayerName.S.split(',')[0], Score: item.Score.N }))
           .sort((a, b) => b.Score - a.Score);
       })
       .catch(error => console.error(error));
@@ -72,11 +72,10 @@ export default class extends StopWatch {
         body: JSON.stringify(scoreInput)
       })
         .then(response => {
-          if (response.statusCode === 200) {
-            debugger;
+          if (response.status === 200) {
             this.highscore = this.sortScore(playerName, score);
           }
-          if (response.statusCode === 400) {
+          if (response.status === 400) {
             alert(response.text());
           }
           return response.text();
@@ -139,15 +138,27 @@ export default class extends StopWatch {
     return string.charAt(0).toUpperCase() + string.slice(1);
   }
 
-  goMain(lastTimes) {
+  static calculateLevel({ time, level }, accumulator = 0) {
+    const multiplier = 10000 / time;
+    return accumulator + Math.round(level * 100 * multiplier);
+  }
+
+  goMain(lostLevels) {
     this.totalTime = this.stopTimer();
     this.startTime = new Date();
     this.end = true;
     this.splash.isScore = true;
 
-    this.moveHighscore(this.capitalizeFirstLetter(
-      this.splash.playerName), lastTimes,
-      this.progress.reduce((accumator, stage) => accumator + Math.round((stage.level + (LIVES - lastTimes.length)) * (100 - stage.time / 10000)), 0));
+    const score = this.progress.reduce((accumulator, stage) => this.constructor.calculateLevel(stage, accumulator), 0);
+    const timeAlive = lostLevels.reduce((accumulator, value) => accumulator + value, 0);
+    const livesLeft = LIVES - lostLevels.length;
+    let livesBonus = 0
+    for (let i = 0; i < livesLeft; i++) {
+      const lastLevel = this.progress.at(-1).level;
+      livesBonus += this.constructor.calculateLevel({ time: (this.totalTime - timeAlive) / lastLevel, level: lastLevel + i });
+    }
+
+    this.moveHighscore(this.capitalizeFirstLetter(this.splash.playerName), lostLevels, score + livesBonus, this.progress, this.totalTime, this.highscore);
     this.startGam();
   }
 
