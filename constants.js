@@ -10,4 +10,4 @@ export const WAK = 4;
 export const LIVES = 3;
 export const GET_API = 'https://57uwleztw33fsrmhpxkotzh3gq0kxpmu.lambda-url.eu-central-1.on.aws/';
 export const POST_API = 'https://xkbknfcuvyhjgv4bo3q77hhghm0vomfa.lambda-url.eu-central-1.on.aws/';
-export const VERSION = '1.0.0';
+export const VERSION = '1.0.1';
