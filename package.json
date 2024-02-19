@@ -1,6 +1,6 @@
 {
   "name": "boosp5",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "",
   "main": "sketch.js",
   "scripts": {
@@ -8,7 +8,7 @@
     "start": "http-server --cors=*",
     "build": "rollup -c"
   },
-  "author": "",
+  "author": "Hendrik Ras",
   "license": "ISC",
   "dependencies": {
     "http-server": "^14.1.1"

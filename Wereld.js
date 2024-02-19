@@ -13,9 +13,9 @@ export default class extends StopWatch {
     this.dim = dimensie;
     this.hoofd = hoofd;
     this.updown = true;
-    this.iLif = LIVES;
+    this.levens = LIVES;
     this.bolDelay = FRAME_RATE / 2;
-    this.iLev = 1;
+    this.level = 1;
     this.einde = false;
     this.pause = false;
     this.count = 0;
@@ -34,17 +34,18 @@ export default class extends StopWatch {
       Array.from({ length: this.dim.height }, (_, heightIndex) => {
         if (widthIndex === 0 && heightIndex === 0) {
           return this.mens;
-        } else if (heightIndex === this.dim.height - 1 && widthIndex === this.dim.width - 1) {
-          return this.bol;
-        } else if (wak && heightIndex === wak.y && widthIndex === wak.x) {
-          return new Wak(widthIndex, heightIndex, this.dim);
-        } else if (Math.random() < 0.25) {
-          return new Doos(widthIndex, heightIndex, this.dim);
-        } else {
-          return new Leeg(widthIndex, heightIndex, this.dim);
         }
-      })
-    );
+        if (heightIndex === this.dim.height - 1 && widthIndex === this.dim.width - 1) {
+          return this.bol;
+        }
+        if (wak && heightIndex === wak.y && widthIndex === wak.x) {
+          return new Wak(widthIndex, heightIndex, this.dim);
+        }
+        if (Math.random() < 0.25) {
+          return new Doos(widthIndex, heightIndex, this.dim);
+        }
+        return new Leeg(widthIndex, heightIndex, this.dim);
+      }));
 
     this.afstand = new Array(this.dim.width).fill(null).map(() => new Array(this.dim.height).fill(Infinity));
     this.tekenGrootte = DRAW_SIZE / this.dim.height;
@@ -57,25 +58,24 @@ export default class extends StopWatch {
 
     const levelCandidate = this.velden.map((array) => array.map(veld => veld.typeVeld));
     this.resetAfstand();
-    this.bepaalAfstand(this.mens.getX(), this.mens.getY(), 1);
+    this.bepaalAfstand(this.mens.positie.x, this.mens.positie.y, 1);
     this.moves = [];
     this.bolMoves = [];
     if (this.afstand[this.dim.height - 1][this.dim.width - 1] !== Infinity) {
       this.LevelStartPos = levelCandidate.flat();
     } else {
-      this.reset();
-
+      this.reset(wak);
     }
   }
 
   start(p5) {
     const levelBlock = p5?.select('#level-block');
     if (levelBlock) {
-      levelBlock.html(`level: ${this.iLev}`);
+      levelBlock.html(`level: ${this.level}`);
       const lifeBlock = p5.select('#life-block');
       let lifstr = '';
 
-      for (let i = 0; i < this.iLif; i++) {
+      for (let i = 0; i < this.levens; i++) {
         lifstr = `${lifstr}❤️`;
       }
       lifeBlock.html(lifstr)
@@ -104,7 +104,7 @@ export default class extends StopWatch {
       {
         this.count = 0;
         this.resetAfstand();
-        this.bepaalAfstand(this.mens.getX(), this.mens.getY(), 1);
+        this.bepaalAfstand(this.mens.positie.x, this.mens.positie.y, 1);
         this.verplaatsBol();
       }
       this.count += 1;
@@ -161,8 +161,7 @@ export default class extends StopWatch {
   }
 
   verplaatsBol() {
-    let x = this.bol.getX();
-    let y = this.bol.getY();
+    const { x, y } = this.bol.positie;
     let af = []; // afstanden in 4 richtingen
     let min = 0;
 
@@ -197,7 +196,7 @@ export default class extends StopWatch {
     if (af[min] === Infinity && this.bolMoves.length > 0) {
       // geen zet meer mogelijk !!
       this.hoofd.progress.push({
-        level: this.iLev,
+        level: this.level,
         moves: this.moves,
         bolMoves: this.bolMoves,
         time: this.stopTimer(),
@@ -205,7 +204,7 @@ export default class extends StopWatch {
       });
       this.dim.height++;
       this.dim.width++;
-      this.iLev++;
+      this.level++;
       this.startTime = null;
       if (this.bolDelay !== 1) {
         this.bolDelay--;
@@ -213,10 +212,10 @@ export default class extends StopWatch {
         this.hoofd.goMain(this.liveTimes);
         this.liveTimes = [];
         this.bolDelay = FRAME_RATE / 2;
-        this.iLif = LIVES;
+        this.levens = LIVES;
         this.dim.height = 10;
         this.dim.width = 10;
-        this.iLev = 1;
+        this.level = 1;
       }
 
       this.reset();
@@ -246,18 +245,18 @@ export default class extends StopWatch {
     // staat op de nieuwe positie soms de mens??
     const isMens = this.velden[x + dx][y + dy].isMens();
     if (isMens) {
-      this.iLif--;
+      this.levens--;
       this.liveTimes.push(this.stopTimer());
       this.startTime = null;
       this.bolMoves = [];
-      if (this.iLif === 0) {
+      if (this.levens === 0) {
         this.hoofd.goMain(this.liveTimes); // terug naar hoofdscherm
         this.liveTimes = [];
         this.bolDelay = FRAME_RATE / 2;
-        this.iLif = LIVES;
+        this.levens = LIVES;
         this.dim.height = 10;
         this.dim.width = 10;
-        this.iLev = 1;
+        this.level = 1;
       }
       const pos = new Punt(x + dx, y + dy)
 
@@ -283,7 +282,7 @@ export default class extends StopWatch {
   }
 
   direction(dx, dy) {
-    if (dx === 1 && dy === 0) return  2; // right
+    if (dx === 1 && dy === 0) return 2; // right
     else if (dx === -1 && dy === 0) return 0; // left
     else if (dy === 1 && dx === 0) return 3; // down
     else if (dy === -1 && dx === 0) return 1; // up
@@ -294,8 +293,7 @@ export default class extends StopWatch {
   verplaatsMens(dx, dy) {
     if (dx === 0 && dy === 0) return false; // no movement desired
 
-    let x = this.mens.getX(); // current position
-    let y = this.mens.getY();
+    const { x, y } = this.mens.positie;
     let nx = x + dx; // new position
     let ny = y + dy;
     const magDat = this.isLegaal(nx, ny)
