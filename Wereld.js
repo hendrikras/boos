@@ -1,14 +1,14 @@
-import Doos from './Doos.js';
-import Leeg from './Leeg.js';
-import Bol from './Bol.js';
-import Mens from './Mens.js';
-import Wak from './Wak.js';
-import StopWatch from './StopWatch.js';
-import Punt from './Punt.js';
-import { DRAW_SIZE, FRAME_RATE, LIVES } from './constants.js';
+import Doos from "./Doos.js";
+import Leeg from "./Leeg.js";
+import Bol from "./Bol.js";
+import Mens from "./Mens.js";
+import Wak from "./Wak.js";
+import StopWatch from "./StopWatch.js";
+import Punt from "./Punt.js";
+import { DRAW_SIZE, FRAME_RATE, LIVES } from "./constants.js";
 
 export default class extends StopWatch {
-  constructor(dimensie, hoofd) {
+  constructor(dimensie, hoofd, audio) {
     super();
     this.dim = dimensie;
     this.hoofd = hoofd;
@@ -26,6 +26,7 @@ export default class extends StopWatch {
     this.startTime = null;
     this.liveTimes = [];
     this.LevelStartPos = null;
+    this.audio = audio;
     this.reset();
   }
 
@@ -35,7 +36,10 @@ export default class extends StopWatch {
         if (widthIndex === 0 && heightIndex === 0) {
           return this.mens;
         }
-        if (heightIndex === this.dim.height - 1 && widthIndex === this.dim.width - 1) {
+        if (
+          heightIndex === this.dim.height - 1 &&
+          widthIndex === this.dim.width - 1
+        ) {
           return this.bol;
         }
         if (wak && heightIndex === wak.y && widthIndex === wak.x) {
@@ -45,9 +49,12 @@ export default class extends StopWatch {
           return new Doos(widthIndex, heightIndex, this.dim);
         }
         return new Leeg(widthIndex, heightIndex, this.dim);
-      }));
+      }),
+    );
 
-    this.afstand = new Array(this.dim.width).fill(null).map(() => new Array(this.dim.height).fill(Infinity));
+    this.afstand = new Array(this.dim.width)
+      .fill(null)
+      .map(() => new Array(this.dim.height).fill(Infinity));
     this.tekenGrootte = DRAW_SIZE / this.dim.height;
 
     this.mens.reset(this.dim);
@@ -56,7 +63,9 @@ export default class extends StopWatch {
     this.wissel = false;
     this.einde = false;
 
-    const levelCandidate = this.velden.map((array) => array.map(veld => veld.typeVeld));
+    const levelCandidate = this.velden.map((array) =>
+      array.map((veld) => veld.typeVeld),
+    );
     this.resetAfstand();
     this.bepaalAfstand(this.mens.positie.x, this.mens.positie.y, 1);
     this.moves = [];
@@ -69,16 +78,16 @@ export default class extends StopWatch {
   }
 
   start(p5) {
-    const levelBlock = p5?.select('#level-block');
+    const levelBlock = p5?.select("#level-block");
     if (levelBlock) {
       levelBlock.html(`level: ${this.level}`);
-      const lifeBlock = p5.select('#life-block');
-      let lifstr = '';
+      const lifeBlock = p5.select("#life-block");
+      let lifstr = "";
 
       for (let i = 0; i < this.levens; i++) {
         lifstr = `${lifstr}❤️`;
       }
-      lifeBlock.html(lifstr)
+      lifeBlock.html(lifstr);
       this.run(p5);
     } else {
       this.hoofd.splash.active = true;
@@ -96,12 +105,12 @@ export default class extends StopWatch {
     }
   }
 
-  action()    //  verwerk timer event
-  {
-    if (!this.einde)            //  bij einde geen actie
-    {
-      if (this.count === this.bolDelay)        //  om en om
-      {
+  action() {
+    //  verwerk timer event
+    if (!this.einde) {
+      //  bij einde geen actie
+      if (this.count === this.bolDelay) {
+        //  om en om
         this.count = 0;
         this.resetAfstand();
         this.bepaalAfstand(this.mens.positie.x, this.mens.positie.y, 1);
@@ -118,13 +127,12 @@ export default class extends StopWatch {
   paint(p5) {
     p5.background(255, 255, 255);
     p5.fill(0, 0, 255);
-    let dimsiz = this.dim.height
+    let dimsiz = this.dim.height;
     for (let i = 0; i < dimsiz; i++) {
       for (let j = 0; j < dimsiz; j++) {
         this.velden[i][j].paint(p5);
       }
     }
-
   }
 
   resetAfstand() {
@@ -173,18 +181,22 @@ export default class extends StopWatch {
       af[3] = this.isLegaal(x, y + 1) ? this.afstand[x][y + 1] : Infinity;
     } else {
       // doe maar wat
-      af[0] = this.isLegaal(x - 1, y) && this.velden[x - 1][y].isLeeg()
-        ? this.dobbelsteen()
-        : Infinity;
-      af[1] = this.isLegaal(x, y - 1) && this.velden[x][y - 1].isLeeg()
-        ? this.dobbelsteen()
-        : Infinity;
-      af[2] = this.isLegaal(x + 1, y) && this.velden[x + 1][y].isLeeg()
-        ? this.dobbelsteen()
-        : Infinity;
-      af[3] = this.isLegaal(x, y + 1) && this.velden[x][y + 1].isLeeg()
-        ? this.dobbelsteen()
-        : Infinity;
+      af[0] =
+        this.isLegaal(x - 1, y) && this.velden[x - 1][y].isLeeg()
+          ? this.dobbelsteen()
+          : Infinity;
+      af[1] =
+        this.isLegaal(x, y - 1) && this.velden[x][y - 1].isLeeg()
+          ? this.dobbelsteen()
+          : Infinity;
+      af[2] =
+        this.isLegaal(x + 1, y) && this.velden[x + 1][y].isLeeg()
+          ? this.dobbelsteen()
+          : Infinity;
+      af[3] =
+        this.isLegaal(x, y + 1) && this.velden[x][y + 1].isLeeg()
+          ? this.dobbelsteen()
+          : Infinity;
     }
 
     for (let i = 1; i < 4; i++) {
@@ -200,7 +212,7 @@ export default class extends StopWatch {
         moves: this.moves,
         bolMoves: this.bolMoves,
         time: this.stopTimer(),
-        levelStartPos: this.LevelStartPos
+        levelStartPos: this.LevelStartPos,
       });
       this.dim.height++;
       this.dim.width++;
@@ -258,16 +270,19 @@ export default class extends StopWatch {
         this.dim.width = 10;
         this.level = 1;
       }
-      const pos = new Punt(x + dx, y + dy)
-
+      const pos = new Punt(x + dx, y + dy);
+      this.audio.play("shield");
       this.reset(pos);
       return false;
     }
 
     this.bol.verplaatsen(dx, dy);
     this.bolMoves.push(min);
-    this.velden[x + dx][y + dy] = isMens ? new Wak(x + dx, y + dy, this.dim) : this.bol;
+    this.velden[x + dx][y + dy] = isMens
+      ? new Wak(x + dx, y + dy, this.dim)
+      : this.bol;
     this.velden[x][y] = new Leeg(x, y, this.dim);
+    this.audio.play("snowStep");
 
     return true;
   }
@@ -282,11 +297,17 @@ export default class extends StopWatch {
   }
 
   direction(dx, dy) {
-    if (dx === 1 && dy === 0) return 2; // right
-    else if (dx === -1 && dy === 0) return 0; // left
-    else if (dy === 1 && dx === 0) return 3; // down
-    else if (dy === -1 && dx === 0) return 1; // up
-    else { console.warn("Invalid direction") };
+    if (dx === 1 && dy === 0)
+      return 2; // right
+    else if (dx === -1 && dy === 0)
+      return 0; // left
+    else if (dy === 1 && dx === 0)
+      return 3; // down
+    else if (dy === -1 && dx === 0)
+      return 1; // up
+    else {
+      console.warn("Invalid direction");
+    }
     return 4;
   }
 
@@ -296,7 +317,7 @@ export default class extends StopWatch {
     const { x, y } = this.mens.positie;
     let nx = x + dx; // new position
     let ny = y + dy;
-    const magDat = this.isLegaal(nx, ny)
+    const magDat = this.isLegaal(nx, ny);
 
     if (!magDat) return false; // movement not possible
 
@@ -309,7 +330,6 @@ export default class extends StopWatch {
       if (!isLegit) return false; // no movement
     }
 
-
     if (this.velden[nx][ny].isLeeg() && rijDozen) {
       this.velden[nx][ny] = new Doos(nx, ny, this.dim);
       this.velden[x + dx][y + dy] = new Leeg(x + dx, y + dy, this.dim);
@@ -321,8 +341,7 @@ export default class extends StopWatch {
       this.velden[x + dx][y + dy] = this.mens;
       this.velden[x][y] = new Leeg(x, y, this.dim);
     }
-
+    this.audio.play("move");
     return true;
   }
-
 }

@@ -1,43 +1,44 @@
-import { DRAW_SIZE } from './constants.js';
+import { DRAW_SIZE } from "./constants.js";
 
 const TEXT_SIZE = DRAW_SIZE / 13;
 
 export default class {
-  constructor(wereld, hoofd, p5) {
+  constructor(wereld, hoofd, p5, audio) {
     this.hoofd = hoofd;
     this.hoogte = p5.height;
     this.breedte = p5.width;
     this.p5 = p5;
     this.selectedY = 1;
     this.selectedX = 0;
-    this.playerName = '';
+    this.playerName = "";
     this.lineWidth = 0;
     this.totalLines = 0;
     this.alphabet = "abcdefghijklmnopqrstuvwxyz_⬅✔️";
     this.isMain = true;
     this.active = true;
     this.isScore = false;
-    this.callback = (name) => console.log('not implemented ' + name);
+    this.callback = (name) => console.log("not implemented " + name);
+    this.audio = audio;
   }
 
   updateName(char, remove = false) {
     if (!remove) {
       this.playerName += char;
     }
-    this.printHeader('Name:', this.playerName);
+    this.printHeader("Name:", this.playerName);
   }
 
   printHeader(left, right) {
-    const levelBlock = this.p5.select('#level-block');
+    const levelBlock = this.p5.select("#level-block");
     levelBlock.html(left);
-    const lifeBlock = this.p5.select('#life-block');
+    const lifeBlock = this.p5.select("#life-block");
     lifeBlock.html(right);
   }
 
   paint() {
     this.p5.fill(255, 255, 255);
     this.p5.rect(0, 0, this.hoogte, this.breedte);
-    this.p5.fill('#ffd9e5');
+    this.p5.fill("#ffd9e5");
     this.p5.stroke(0);
     this.p5.strokeWeight(8);
 
@@ -47,27 +48,26 @@ export default class {
       // Now put something in the middle (more or less).
       this.p5.textAlign(this.p5.CENTER, this.p5.CENTER);
       if (this.isScore) {
-        if (this.hoofd.yourScore){
-          this.printHeader('Your Score', this.hoofd.yourScore);
+        if (this.hoofd.yourScore) {
+          this.printHeader("Your Score", this.hoofd.yourScore);
         } else {
-          this.printHeader('High', 'Score');
+          this.printHeader("High", "Score");
         }
-  
+
         this.hoofd.highscore.forEach((item, index) => {
           this.p5.textSize(TEXT_SIZE);
           this.drawButton(`${item.PlayerName} ${item.Score}`, index, false);
         });
-
       } else {
         this.p5.textSize(TEXT_SIZE);
-        this.drawButton('Start', 1);
-        this.drawButton('Enter name', 2);
-        this.drawButton('High Score', 3);
-        this.totalLines = 3;
+        this.drawButton("Start", 1);
+        this.drawButton("Enter name", 2);
+        this.drawButton("High Score", 3);
+        this.drawButton(`Sound: ${this.audio.isMuted ? "❌" : "✅"}`, 4);
+        this.totalLines = 4;
       }
-
     } else {
-      const SPACING = DRAW_SIZE / 6.5;;
+      const SPACING = DRAW_SIZE / 6.5;
       this.p5.textSize(SPACING);
       let x = 0;
       let y = SPACING;
@@ -76,11 +76,11 @@ export default class {
       for (let i = 0; i < this.alphabet.length; i++) {
         let char = this.alphabet[i];
         if (this.selectedX === i) {
-          this.p5.textSize(SPACING + (TEXT_SIZE / 2));
-          this.p5.fill('pink');
+          this.p5.textSize(SPACING + TEXT_SIZE / 2);
+          this.p5.fill("pink");
         } else {
           this.p5.textSize(SPACING);
-          this.p5.fill('255')
+          this.p5.fill("255");
         }
         this.p5.text(char, x + SPACING / 2, y);
         x += SPACING;
@@ -99,8 +99,8 @@ export default class {
 
   drawButton(label, index, drawFlake = true) {
     const x = this.breedte / 2;
-    const y = this.hoogte / 2 - (this.hoogte / 3) + index * (this.hoogte / 12);
-    const prefix = index === this.selectedY && drawFlake ? '❄️' : '';
+    const y = this.hoogte / 2 - this.hoogte / 3 + index * (this.hoogte / 12);
+    const prefix = index === this.selectedY && drawFlake ? "❄️" : "";
     this.p5.textAlign(this.p5.CENTER, this.p5.CENTER);
     this.p5.text(`${prefix}${label}${prefix}`, x, y);
   }
@@ -108,22 +108,29 @@ export default class {
     if (this.selectedY < this.totalLines) {
       this.selectedY++;
       this.selectedX += this.lineWidth + 1;
+      this.audio.play("menuChange");
     }
   }
   moveUp() {
     if (this.selectedY > 1) {
       this.selectedY--;
       this.selectedX -= this.lineWidth + 1;
+      this.audio.play("menuChange");
     }
   }
   moveRight() {
     const endLine = this.lineWidth * this.selectedY;
-    if (this.selectedX < this.alphabet.length - 2 && this.selectedX < endLine + (this.selectedY - 1)) {
+    if (
+      this.selectedX < this.alphabet.length - 2 &&
+      this.selectedX < endLine + (this.selectedY - 1)
+    ) {
       this.selectedX++;
     }
   }
   moveLeft() {
-    const modulo = this.lineWidth * (this.selectedY - 1 % this.lineWidth) + (this.selectedY - 1);
+    const modulo =
+      this.lineWidth * (this.selectedY - (1 % this.lineWidth)) +
+      (this.selectedY - 1);
     if (this.selectedX > 0 && this.selectedX > modulo) {
       this.selectedX--;
     }
@@ -152,9 +159,12 @@ export default class {
             this.selectedX = 0;
             this.selectedY = 1;
             this.isMain = false;
-            break
+            break;
           case 3:
             this.isScore = true;
+            break;
+          case 4:
+            this.audio.toggleMute();
             break;
           default:
             this.selectedY = 1;
@@ -167,7 +177,10 @@ export default class {
           this.callback(this.playerName);
           this.callback = () => null;
         } else if (this.selectedX === this.alphabet.length - 3) {
-          this.playerName = this.playerName.substring(0, this.playerName.length - 1);
+          this.playerName = this.playerName.substring(
+            0,
+            this.playerName.length - 1,
+          );
           this.updateName(null, true);
         } else {
           if (this.playerName.length <= 10) {

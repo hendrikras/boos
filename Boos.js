@@ -1,13 +1,13 @@
-import Wereld from './Wereld.js';
-import Splash from './Splash.js';
-import Dimensie from './Dimensie.js';
-import StopWatch from './StopWatch.js';
-import { GET_API, LIVES, POST_API, VERSION } from './constants.js';
+import Wereld from "./Wereld.js";
+import Splash from "./Splash.js";
+import Dimensie from "./Dimensie.js";
+import StopWatch from "./StopWatch.js";
+import { GET_API, LIVES, POST_API, VERSION } from "./constants.js";
 
 function sortScore(PlayerName, Score, highscore) {
   const newScore = { PlayerName, Score };
   const compare = highscore.slice();
-  const index = compare.findIndex(item => item.Score < Score);
+  const index = compare.findIndex((item) => item.Score < Score);
   if (index === -1) {
     compare.push(newScore);
   } else {
@@ -18,42 +18,53 @@ function sortScore(PlayerName, Score, highscore) {
 }
 
 export default class extends StopWatch {
-  constructor(p5) {
+  constructor(p5, audio) {
     super();
     this.dim = new Dimensie(10, 10);
-    this.wereld = new Wereld(this.dim, this, p5);
-    this.splash = new Splash(this.wereld, this, p5);
+    this.wereld = new Wereld(this.dim, this, audio);
+    this.splash = new Splash(this.wereld, this, p5, audio);
     this.p5 = p5;
     this.end = true;
     this.highscore = [
-      { PlayerName: 'Peter', Score: 1000 },
-      { PlayerName: 'Mike', Score: 900 },
-      { PlayerName: 'John', Score: 800 },
-      { PlayerName: 'Jane', Score: 700 },
-      { PlayerName: 'Sue', Score: 600 },
-      { PlayerName: 'Bill', Score: 500 },
-      { PlayerName: 'Kate', Score: 400 },
-      { PlayerName: 'Alex', Score: 300 },
-      { PlayerName: 'Anna', Score: 200 },
-      { PlayerName: 'Rebecca', Score: 100 }
+      { PlayerName: "Peter", Score: 1000 },
+      { PlayerName: "Mike", Score: 900 },
+      { PlayerName: "John", Score: 800 },
+      { PlayerName: "Jane", Score: 700 },
+      { PlayerName: "Sue", Score: 600 },
+      { PlayerName: "Bill", Score: 500 },
+      { PlayerName: "Kate", Score: 400 },
+      { PlayerName: "Alex", Score: 300 },
+      { PlayerName: "Anna", Score: 200 },
+      { PlayerName: "Rebecca", Score: 100 },
     ];
     this.yourScore = null;
     this.totalTime = null;
 
     fetch(GET_API)
-      .then(response => {
+      .then((response) => {
         return response.text();
       })
-      .then(data => {
+      .then((data) => {
         this.highscore = JSON.parse(data)
-          .map(item => ({ PlayerName: item.PlayerName.S.split(',')[0], Score: item.Score.N }))
+          .map((item) => ({
+            PlayerName: item.PlayerName.S.split(",")[0],
+            Score: item.Score.N,
+          }))
           .sort((a, b) => b.Score - a.Score);
       })
-      .catch(error => console.error(error));
+      .catch((error) => console.error(error));
     this.progress = [];
   }
 
-  moveHighscore(playerName, lastTimes, score, levelStats, totalTime, highscore, setHighscore) {
+  moveHighscore(
+    playerName,
+    lastTimes,
+    score,
+    levelStats,
+    totalTime,
+    highscore,
+    setHighscore,
+  ) {
     function doFetch(name) {
       const scoreInput = {
         version: VERSION,
@@ -62,20 +73,20 @@ export default class extends StopWatch {
         lastTimes,
         score,
         playerName: name,
-      }
+      };
       fetch(POST_API, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(scoreInput)
+        body: JSON.stringify(scoreInput),
       })
-        .then(response => {
+        .then((response) => {
           setHighscore(sortScore(name, score, highscore));
           return response.text();
         })
-        .catch(error => console.error(error));
-      }
+        .catch((error) => console.error(error));
+    }
     const lowestScore = this.highscore.at(-1).Score;
     if (score < lowestScore) {
       this.yourScore = score === 0 ? 1 : score;
@@ -107,7 +118,6 @@ export default class extends StopWatch {
     } else {
       this.wereld.verplaatsMens(0, 1);
     }
-
   }
   moveUp() {
     this.splash.moveUp();
@@ -120,7 +130,6 @@ export default class extends StopWatch {
     if (!this.end) {
       this.wereld.paint(this.p5);
     }
-
   }
 
   startApp() {
@@ -155,16 +164,34 @@ export default class extends StopWatch {
     this.end = true;
     this.splash.isScore = true;
 
-    const score = this.progress.reduce((accumulator, stage) => this.constructor.calculateLevel(stage, accumulator), 0);
-    const timeAlive = lostLevels.reduce((accumulator, value) => accumulator + value, 0);
+    const score = this.progress.reduce(
+      (accumulator, stage) =>
+        this.constructor.calculateLevel(stage, accumulator),
+      0,
+    );
+    const timeAlive = lostLevels.reduce(
+      (accumulator, value) => accumulator + value,
+      0,
+    );
     const livesLeft = LIVES - lostLevels.length;
-    let livesBonus = 0
+    let livesBonus = 0;
     for (let i = 0; i < livesLeft; i++) {
       const lastLevel = this.progress.at(-1).level;
-      livesBonus += this.constructor.calculateLevel({ time: (this.totalTime - timeAlive) / lastLevel, level: lastLevel + i });
+      livesBonus += this.constructor.calculateLevel({
+        time: (this.totalTime - timeAlive) / lastLevel,
+        level: lastLevel + i,
+      });
     }
 
-    this.moveHighscore(this.capitalizeFirstLetter(this.splash.playerName), lostLevels, score + livesBonus, this.progress, this.totalTime, this.highscore, (score) => this.highscore = score);
+    this.moveHighscore(
+      this.capitalizeFirstLetter(this.splash.playerName),
+      lostLevels,
+      score + livesBonus,
+      this.progress,
+      this.totalTime,
+      this.highscore,
+      (score) => (this.highscore = score),
+    );
     this.startGam();
   }
 
